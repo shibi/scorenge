@@ -72,11 +72,6 @@ android {
         compose = true
     }
 
-    // MigrationTestHelper reads the exported schemas as test assets.
-    sourceSets {
-        getByName("test").assets.srcDir("$projectDir/schemas")
-    }
-
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -134,7 +129,6 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
-    testImplementation(libs.room.testing)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.kotlinx.coroutines.test)
