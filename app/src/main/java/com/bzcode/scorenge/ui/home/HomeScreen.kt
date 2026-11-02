@@ -41,6 +41,7 @@ import com.bzcode.scorenge.ui.theme.ScorengeTheme
  */
 @Composable
 fun HomeScreen(
+    firstName: String?,
     onNewMatch: () -> Unit,
     onSearchGames: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -51,7 +52,7 @@ fun HomeScreen(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        item { Header(onOpenSettings) }
+        item { Header(firstName, onOpenSettings) }
         item { SearchPill(onSearchGames) }
         item { NoMatchCard(onNewMatch) }
         item { RecentMatchesSection() }
@@ -59,11 +60,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun Header(onOpenSettings: () -> Unit) {
+private fun Header(firstName: String?, onOpenSettings: () -> Unit) {
     Row(verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
             Text(
-                text = "Hi there",
+                text = if (firstName != null) "Hi $firstName" else "Hi there",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -178,6 +179,6 @@ private fun RecentMatchesSection() {
 @Composable
 private fun HomeScreenPreview() {
     ScorengeTheme {
-        HomeScreen(onNewMatch = {}, onSearchGames = {}, onOpenSettings = {})
+        HomeScreen(firstName = "Sam", onNewMatch = {}, onSearchGames = {}, onOpenSettings = {})
     }
 }

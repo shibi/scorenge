@@ -17,12 +17,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.bzcode.scorenge.data.auth.AuthUser
 import com.bzcode.scorenge.ui.common.PlaceholderScreen
 import com.bzcode.scorenge.ui.home.HomeScreen
+import com.bzcode.scorenge.ui.settings.SettingsScreen
 
-/** App shell: the nav graph plus the floating pill bar, which shows only on top-level destinations. */
+/** Signed-in app shell: the nav graph plus the floating pill bar, which shows only on top-level destinations. */
 @Composable
-fun ScorengeAppRoot(navController: NavHostController = rememberNavController()) {
+fun ScorengeAppRoot(
+    user: AuthUser,
+    onSignOut: () -> Unit,
+    navController: NavHostController = rememberNavController(),
+) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentTopLevel = backStackEntry?.destination?.topLevelDestination()
 
@@ -48,6 +54,7 @@ fun ScorengeAppRoot(navController: NavHostController = rememberNavController()) 
         ) {
             composable<HomeRoute> {
                 HomeScreen(
+                    firstName = user.firstName,
                     onNewMatch = { navController.navigate(NewMatchRoute) },
                     onSearchGames = { navController.navigateToTopLevel(TopLevelDestination.GAMES) },
                     onOpenSettings = { navController.navigate(SettingsRoute) },
@@ -70,10 +77,10 @@ fun ScorengeAppRoot(navController: NavHostController = rememberNavController()) 
                 )
             }
             composable<SettingsRoute> {
-                PlaceholderScreen(
-                    title = "Settings",
-                    message = "Account and sign-out will live here.",
+                SettingsScreen(
+                    user = user,
                     onBack = { navController.popBackStack() },
+                    onSignOut = onSignOut,
                 )
             }
         }
