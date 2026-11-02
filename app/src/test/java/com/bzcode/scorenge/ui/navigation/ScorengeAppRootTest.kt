@@ -56,7 +56,7 @@ class ScorengeAppRootTest {
     @Test
     fun settingsShowsAccountAndConfirmsSignOut() {
         var signedOut = false
-        compose.setContent { ScorengeTheme { ScorengeAppRoot(user = USER, onSignOut = { signedOut = true }) } }
+        compose.setContent { ScorengeTheme { ScorengeAppRoot(user = USER, onSignOut = { signedOut = true }, backupContent = {}) } }
 
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.onNodeWithText("sam@example.com").assertExists()

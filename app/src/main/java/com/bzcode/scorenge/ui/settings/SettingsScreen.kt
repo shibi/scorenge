@@ -45,6 +45,7 @@ fun SettingsScreen(
     user: AuthUser,
     onBack: () -> Unit,
     onSignOut: () -> Unit,
+    backupContent: @Composable () -> Unit = {},
 ) {
     var confirmSignOut by rememberSaveable { mutableStateOf(false) }
 
@@ -90,6 +91,7 @@ fun SettingsScreen(
                     }
                 }
             }
+            backupContent()
             Text(
                 text = "Signing out keeps your matches on this phone. Sign in with the same account to see them again.",
                 style = MaterialTheme.typography.bodyMedium,

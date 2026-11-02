@@ -29,6 +29,7 @@ import com.bzcode.scorenge.ui.match.NewMatchPage
 import com.bzcode.scorenge.ui.match.ResultsPage
 import com.bzcode.scorenge.ui.match.RoundPage
 import com.bzcode.scorenge.ui.players.PlayersPage
+import com.bzcode.scorenge.ui.settings.BackupSection
 import com.bzcode.scorenge.ui.settings.SettingsScreen
 import com.bzcode.scorenge.ui.stats.StatsPage
 
@@ -43,6 +44,7 @@ fun ScorengeAppRoot(
     newMatchContent: @Composable (onBack: () -> Unit, onCreateGame: () -> Unit, onStarted: (String) -> Unit) -> Unit =
         { onBack, onCreateGame, onStarted -> NewMatchPage(onBack = onBack, onCreateGame = onCreateGame, onStarted = onStarted) },
     statsContent: @Composable () -> Unit = { StatsPage() },
+    backupContent: @Composable () -> Unit = { BackupSection() },
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentTopLevel = backStackEntry?.destination?.topLevelDestination()
@@ -130,6 +132,7 @@ fun ScorengeAppRoot(
                     user = user,
                     onBack = { navController.popBackStack() },
                     onSignOut = onSignOut,
+                    backupContent = backupContent,
                 )
             }
         }
