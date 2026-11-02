@@ -17,4 +17,11 @@ interface GameDao {
     /** Games not soft-deleted, alphabetical. */
     @Query("SELECT * FROM games WHERE userId = :userId AND deletedAt IS NULL ORDER BY title COLLATE NOCASE")
     fun observeActive(userId: String): Flow<List<GameEntity>>
+
+    @Query("SELECT * FROM games WHERE id = :id")
+    fun observe(id: String): Flow<GameEntity?>
+
+    /** An active game with this title, ignoring case; used to block duplicates. */
+    @Query("SELECT * FROM games WHERE userId = :userId AND deletedAt IS NULL AND title = :title COLLATE NOCASE LIMIT 1")
+    suspend fun findActiveByTitle(userId: String, title: String): GameEntity?
 }

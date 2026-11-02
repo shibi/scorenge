@@ -19,7 +19,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bzcode.scorenge.data.auth.AuthUser
 import com.bzcode.scorenge.ui.common.PlaceholderScreen
+import com.bzcode.scorenge.ui.games.GameEditPage
+import com.bzcode.scorenge.ui.games.GamesPage
 import com.bzcode.scorenge.ui.home.HomeScreen
+import com.bzcode.scorenge.ui.players.PlayersPage
 import com.bzcode.scorenge.ui.settings.SettingsScreen
 
 /** Signed-in app shell: the nav graph plus the floating pill bar, which shows only on top-level destinations. */
@@ -61,10 +64,16 @@ fun ScorengeAppRoot(
                 )
             }
             composable<GamesRoute> {
-                PlaceholderScreen(title = "All games", message = "Your games will be listed here.")
+                GamesPage(
+                    onAddGame = { navController.navigate(GameEditRoute()) },
+                    onOpenGame = { navController.navigate(GameEditRoute(gameId = it)) },
+                )
+            }
+            composable<GameEditRoute> {
+                GameEditPage(onDone = { navController.popBackStack() })
             }
             composable<PlayersRoute> {
-                PlaceholderScreen(title = "Players", message = "Add the people you play with here.")
+                PlayersPage()
             }
             composable<StatsRoute> {
                 PlaceholderScreen(title = "Stats", message = "Wins and podiums across all games will show here.")
