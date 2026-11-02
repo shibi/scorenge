@@ -33,6 +33,7 @@ class ScorengeAppRootTest {
                     newMatchContent = { onBack, _, _ ->
                         PlaceholderScreen(title = "New match", message = "Match setup", onBack = onBack)
                     },
+                    statsContent = { PlaceholderScreen(title = "Stats", message = "Stats page") },
                 )
             }
         }

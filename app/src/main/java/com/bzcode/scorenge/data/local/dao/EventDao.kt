@@ -12,6 +12,26 @@ import com.bzcode.scorenge.data.local.entity.TeamEntity
 import com.bzcode.scorenge.data.local.entity.TeamMemberEntity
 import kotlinx.coroutines.flow.Flow
 
+/** A finished match on Home's "Recent matches". */
+data class RecentMatchRow(
+    val eventId: String,
+    val title: String,
+    val completedAt: Long?,
+    val gameIcon: String?,
+    val winners: String?,
+)
+
+/** One player's result in one finished match; see [EventDao.observeFinishes]. */
+data class FinishRow(
+    val playerId: String,
+    val playerName: String,
+    val eventId: String,
+    val gameId: String,
+    val gameTitle: String,
+    val gameIcon: String?,
+    val finalRank: Int?,
+)
+
 /** Matches ("events") and the rows that make up their line-up. */
 @Dao
 interface EventDao {
@@ -44,6 +64,42 @@ interface EventDao {
         """,
     )
     fun observeRecentCompleted(userId: String, limit: Int): Flow<List<EventEntity>>
+
+    /** Finished matches with their game icon and winners ("Maya, Leo" on a tie), newest first. */
+    @Query(
+        """
+        SELECT e.id AS eventId, e.title AS title, e.completedAt AS completedAt, g.icon AS gameIcon,
+            (SELECT GROUP_CONCAT(s.name, ', ') FROM scoring_subjects s
+             WHERE s.eventId = e.id AND s.finalRank = 1) AS winners
+        FROM events e
+        LEFT JOIN games g ON g.id = e.gameId
+        WHERE e.userId = :userId AND e.status = 'COMPLETED' AND e.deletedAt IS NULL
+        ORDER BY e.completedAt DESC
+        LIMIT :limit
+        """,
+    )
+    fun observeRecentFinished(userId: String, limit: Int): Flow<List<RecentMatchRow>>
+
+    /**
+     * Each player's finish in each finished match. Team matches give every team member the
+     * team's rank. Names come from the player list when the player still exists.
+     */
+    @Query(
+        """
+        SELECT p.playerId AS playerId, COALESCE(pl.name, p.playerName) AS playerName,
+            e.id AS eventId, e.gameId AS gameId, COALESCE(g.title, '') AS gameTitle, g.icon AS gameIcon,
+            s.finalRank AS finalRank
+        FROM events e
+        INNER JOIN scoring_subjects s ON s.eventId = e.id
+        LEFT JOIN team_members tm ON tm.teamId = s.teamId
+        INNER JOIN event_participants p ON p.id = COALESCE(s.participantId, tm.participantId)
+        LEFT JOIN players pl ON pl.id = p.playerId
+        LEFT JOIN games g ON g.id = e.gameId
+        WHERE e.userId = :userId AND e.status = 'COMPLETED' AND e.deletedAt IS NULL
+        ORDER BY e.completedAt
+        """,
+    )
+    fun observeFinishes(userId: String): Flow<List<FinishRow>>
 
     /** Hard delete. Owned rows (participants, teams, subjects, rounds, scores) cascade. */
     @Query("DELETE FROM events WHERE id = :id")

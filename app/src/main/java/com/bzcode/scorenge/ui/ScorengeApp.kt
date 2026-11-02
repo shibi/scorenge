@@ -27,7 +27,13 @@ fun ScorengeApp(viewModel: AppViewModel = hiltViewModel()) {
         is AuthState.SignedIn -> {
             val homeViewModel: HomeViewModel = hiltViewModel()
             val inProgress by homeViewModel.inProgress.collectAsStateWithLifecycle()
-            ScorengeAppRoot(user = state.user, onSignOut = viewModel::signOut, inProgress = inProgress)
+            val recentMatches by homeViewModel.recentMatches.collectAsStateWithLifecycle()
+            ScorengeAppRoot(
+                user = state.user,
+                onSignOut = viewModel::signOut,
+                inProgress = inProgress,
+                recentMatches = recentMatches,
+            )
         }
     }
 }

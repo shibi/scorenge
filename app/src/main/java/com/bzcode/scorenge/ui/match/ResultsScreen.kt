@@ -27,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,7 +42,7 @@ fun ResultsPage(onDone: () -> Unit, viewModel: MatchViewModel = hiltViewModel())
     ResultsScreen(state = state, onDone = onDone)
 }
 
-/** Final standings. The podium and charts arrive in step 6. */
+/** Winner, podium, score-over-rounds chart and the final standings. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsScreen(state: MatchUiState, onDone: () -> Unit) {
@@ -68,7 +70,6 @@ fun ResultsScreen(state: MatchUiState, onDone: () -> Unit) {
                 .padding(horizontal = 20.dp, vertical = 8.dp)
                 .navigationBarsPadding(),
         ) {
-            Text("🏆", style = MaterialTheme.typography.displayMedium)
             Text(
                 when (winners.size) {
                     0 -> "No winner"
@@ -78,6 +79,7 @@ fun ResultsScreen(state: MatchUiState, onDone: () -> Unit) {
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() },
             )
             Text(
                 listOfNotNull(state.gameIcon, state.title).joinToString(" ") + " · " +
@@ -85,6 +87,32 @@ fun ResultsScreen(state: MatchUiState, onDone: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
+            )
+            Podium(state.standings, Modifier.padding(top = 8.dp))
+            if (state.series.any { it.totals.isNotEmpty() }) {
+                Column(Modifier.fillMaxWidth()) {
+                    Text(
+                        "Score over the rounds",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .semantics { heading() },
+                    )
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        ScoreLineChart(state.series, Modifier.padding(16.dp))
+                    }
+                }
+            }
+            Text(
+                "Final standings",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { heading() },
             )
             Surface(
                 shape = MaterialTheme.shapes.medium,

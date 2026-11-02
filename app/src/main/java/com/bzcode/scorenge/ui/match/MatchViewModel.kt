@@ -9,6 +9,7 @@ import com.bzcode.scorenge.domain.match.FinishBlocker
 import com.bzcode.scorenge.domain.match.RoundRules
 import com.bzcode.scorenge.domain.model.EventStatus
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.scoring.CumulativeSeries
 import com.bzcode.scorenge.domain.scoring.LeaderboardEntry
 import com.bzcode.scorenge.domain.scoring.RankBasis
 import com.bzcode.scorenge.domain.scoring.ScoringEngine
@@ -50,6 +51,8 @@ data class MatchUiState(
     /** Official standings: completed rounds only. After finishing these are the final results. */
     val standings: List<LeaderboardEntry> = emptyList(),
     val rounds: List<RoundRow> = emptyList(),
+    /** Running totals after each completed round, for the line chart. */
+    val series: List<CumulativeSeries> = emptyList(),
     val nextRound: NextRound? = null,
     val finishBlocker: FinishBlocker? = null,
     val finishing: Boolean = false,
@@ -100,6 +103,7 @@ private fun MatchDetail.toUiState(local: MatchUiState): MatchUiState {
             val scores = scoresOf(round.id)
             RoundRow(round.roundNumber, round.status, round.elapsedMillis, subjects.map { scores[it.id] })
         },
+        series = ScoringEngine.cumulativeSeries(subjectRefs, roundScores),
         nextRound = when {
             finished -> null
             active != null -> NextRound.Continue(active.roundNumber)

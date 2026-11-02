@@ -3,8 +3,10 @@ package com.bzcode.scorenge.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bzcode.scorenge.data.auth.AuthRepository
+import com.bzcode.scorenge.data.local.dao.RecentMatchRow
 import com.bzcode.scorenge.data.repository.InProgressMatch
 import com.bzcode.scorenge.data.repository.MatchRepository
+import com.bzcode.scorenge.data.repository.StatsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +20,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     authRepository: AuthRepository,
     matchRepository: MatchRepository,
+    statsRepository: StatsRepository,
 ) : ViewModel() {
 
     /** The match to continue, or null when nothing is in progress. */
@@ -25,4 +28,10 @@ class HomeViewModel @Inject constructor(
     val inProgress: StateFlow<InProgressMatch?> = authRepository.currentUser
         .flatMapLatest { user -> if (user == null) flowOf(null) else matchRepository.observeLatestInProgress(user.uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Finished matches, newest first. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val recentMatches: StateFlow<List<RecentMatchRow>> = authRepository.currentUser
+        .flatMapLatest { user -> if (user == null) flowOf(emptyList()) else statsRepository.observeRecentMatches(user.uid) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 }
