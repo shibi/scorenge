@@ -12,8 +12,11 @@ import com.bzcode.scorenge.data.local.entity.TeamMemberEntity
 import com.bzcode.scorenge.domain.match.MatchSetup
 import com.bzcode.scorenge.domain.match.MatchSetupRules
 import com.bzcode.scorenge.domain.model.EventStatus
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.model.ScoreEntry
+import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.domain.model.ScoringSubjectType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -64,7 +67,12 @@ class MatchRepository @Inject constructor(
                     gameId = game.id,
                     title = title.trim().ifEmpty { game.title },
                     scoringMode = setup.scoringMode,
-                    scoringDirection = game.scoringDirection,
+                    scoringDirection = when (setup.scoring) {
+                        null -> game.scoringDirection
+                        MatchScoring.LOWEST_WINS -> ScoringDirection.LOWER_WINS
+                        MatchScoring.HIGHEST_WINS, MatchScoring.FINISHING_ORDER -> ScoringDirection.HIGHER_WINS
+                    },
+                    scoreEntry = if (setup.scoring == MatchScoring.FINISHING_ORDER) ScoreEntry.FINISHING_ORDER else ScoreEntry.POINTS,
                     roundMode = setup.roundMode,
                     totalRounds = if (setup.roundMode == RoundMode.FIXED) setup.totalRounds else null,
                     status = EventStatus.IN_PROGRESS,

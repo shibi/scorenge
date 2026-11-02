@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.bzcode.scorenge.data.repository.MatchDetail
 import com.bzcode.scorenge.data.repository.RoundRepository
 import com.bzcode.scorenge.di.ApplicationScope
+import com.bzcode.scorenge.domain.match.FinishingOrder
 import com.bzcode.scorenge.domain.model.EventStatus
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.model.ScoreEntry
 import com.bzcode.scorenge.domain.scoring.LeaderboardEntry
 import com.bzcode.scorenge.domain.scoring.RankBasis
 import com.bzcode.scorenge.domain.scoring.ScoringEngine
@@ -29,6 +31,10 @@ data class ScoreField(
     val text: String,
     /** Running total before this round (completed rounds only). */
     val totalBefore: Long,
+    /** Finishing-order matches: this round's place, or null if not placed yet. */
+    val place: Int? = null,
+    /** Finishing-order matches: points this place earns. */
+    val points: Long? = null,
 )
 
 data class RoundUiState(
@@ -44,6 +50,8 @@ data class RoundUiState(
     val elapsedMillis: Long = 0L,
     val openedAt: Long? = null,
     val fields: List<ScoreField> = emptyList(),
+    /** Players or teams are tapped in finishing order instead of typing scores. */
+    val finishingOrder: Boolean = false,
     /** Provisional standings: completed rounds plus this round's scores so far. */
     val leading: List<LeaderboardEntry> = emptyList(),
     val missingCount: Int = 0,
@@ -101,6 +109,20 @@ class RoundViewModel @Inject constructor(
         viewModelScope.launch { roundRepository.setScore(id, subjectId, value) }
     }
 
+    /** Finishing order: places the next finisher, or takes a placed one off (later places move up). */
+    fun onTapFinisher(subjectId: String) {
+        val id = roundId ?: return
+        val placed = uiState.value.fields.filter { it.place != null }.sortedBy { it.place }.map { it.subjectId }
+        val order = if (subjectId in placed) placed - subjectId else placed + subjectId
+        viewModelScope.launch { roundRepository.setFinishingOrder(id, order) }
+    }
+
+    /** Finishing order: clears every place in this round. */
+    fun clearFinishingOrder() {
+        val id = roundId ?: return
+        viewModelScope.launch { roundRepository.setFinishingOrder(id, emptyList()) }
+    }
+
     fun completeRound() {
         val id = roundId ?: return
         if (!uiState.value.canComplete) return
@@ -113,6 +135,7 @@ class RoundViewModel @Inject constructor(
 
     private fun MatchDetail.toRoundState(local: LocalState): RoundUiState? {
         val round = rounds.firstOrNull { it.roundNumber == roundNumber } ?: return null
+        val finishingOrder = event.scoreEntry == ScoreEntry.FINISHING_ORDER
         roundId = round.id
         val saved = scoresOf(round.id)
         val earlier = roundScores.filter { it.roundNumber != roundNumber }
@@ -135,8 +158,11 @@ class RoundViewModel @Inject constructor(
                     name = s.name,
                     text = local.drafts[s.id] ?: saved[s.id]?.toString().orEmpty(),
                     totalBefore = officialBefore[s.id] ?: 0L,
+                    place = if (finishingOrder) FinishingOrder.placeOf(saved[s.id], subjects.size) else null,
+                    points = saved[s.id].takeIf { finishingOrder },
                 )
             },
+            finishingOrder = finishingOrder,
             leading = if (round.status == RoundStatus.COMPLETED) emptyList() else provisional.entries,
             missingCount = subjects.count { saved[it.id] == null },
             completing = local.completing,

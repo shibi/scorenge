@@ -21,7 +21,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ScorengeDatabase =
-        Room.databaseBuilder(context, ScorengeDatabase::class.java, ScorengeDatabase.NAME).build()
+        Room.databaseBuilder(context, ScorengeDatabase::class.java, ScorengeDatabase.NAME)
+            .addMigrations(ScorengeDatabase.MIGRATION_1_2)
+            .build()
 
     @Provides fun provideUserDao(db: ScorengeDatabase): UserDao = db.userDao()
     @Provides fun providePlayerDao(db: ScorengeDatabase): PlayerDao = db.playerDao()

@@ -2,6 +2,8 @@ package com.bzcode.scorenge.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.bzcode.scorenge.data.local.dao.EventDao
 import com.bzcode.scorenge.data.local.dao.GameDao
 import com.bzcode.scorenge.data.local.dao.PlayerDao
@@ -18,7 +20,7 @@ import com.bzcode.scorenge.data.local.entity.TeamEntity
 import com.bzcode.scorenge.data.local.entity.TeamMemberEntity
 import com.bzcode.scorenge.data.local.entity.UserEntity
 
-/** Schema JSON is exported to app/schemas so later versions can be migration-tested against v1. */
+/** Schema JSON is exported to app/schemas so migrations can be tested against older versions. */
 @Database(
     entities = [
         UserEntity::class,
@@ -32,7 +34,7 @@ import com.bzcode.scorenge.data.local.entity.UserEntity
         RoundEntity::class,
         RoundScoreEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class ScorengeDatabase : RoomDatabase() {
@@ -46,5 +48,12 @@ abstract class ScorengeDatabase : RoomDatabase() {
 
     companion object {
         const val NAME = "scorenge.db"
+
+        /** v2: matches can be scored by finishing order. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE events ADD COLUMN scoreEntry TEXT NOT NULL DEFAULT 'POINTS'")
+            }
+        }
     }
 }

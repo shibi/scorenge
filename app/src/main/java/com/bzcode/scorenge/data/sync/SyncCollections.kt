@@ -12,6 +12,7 @@ import com.bzcode.scorenge.data.local.entity.TeamMemberEntity
 import com.bzcode.scorenge.domain.model.EventStatus
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.model.ScoreEntry
 import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.domain.model.ScoringSubjectType
@@ -70,6 +71,7 @@ sealed class SyncCollection<T : Any>(val name: String) {
             "roundMode" to row.roundMode.name, "totalRounds" to row.totalRounds, "status" to row.status.name,
             "startedAt" to row.startedAt, "completedAt" to row.completedAt, "lastPlayedAt" to row.lastPlayedAt,
             "createdAt" to row.createdAt, "updatedAt" to row.updatedAt, "deletedAt" to row.deletedAt,
+            "scoreEntry" to row.scoreEntry.name,
         )
         override fun fromDoc(doc: Doc) = EventEntity(
             id = doc.str("id"), userId = doc.str("userId"), gameId = doc.str("gameId"), title = doc.str("title"),
@@ -81,6 +83,8 @@ sealed class SyncCollection<T : Any>(val name: String) {
             startedAt = doc.longOrNull("startedAt"), completedAt = doc.longOrNull("completedAt"),
             lastPlayedAt = doc.longOrNull("lastPlayedAt"),
             createdAt = doc.long("createdAt"), updatedAt = doc.long("updatedAt"), deletedAt = doc.longOrNull("deletedAt"),
+            // Backups made before finishing-order scoring have no scoreEntry.
+            scoreEntry = doc.strOrNull("scoreEntry")?.let(ScoreEntry::valueOf) ?: ScoreEntry.POINTS,
         )
     }
 

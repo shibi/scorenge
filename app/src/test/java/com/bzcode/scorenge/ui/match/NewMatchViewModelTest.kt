@@ -10,6 +10,7 @@ import com.bzcode.scorenge.data.repository.MatchRepository
 import com.bzcode.scorenge.data.repository.PlayerRepository
 import com.bzcode.scorenge.data.repository.SaveResult
 import com.bzcode.scorenge.domain.match.SetupProblem
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.inlineTestDatabase
@@ -133,6 +134,20 @@ class NewMatchViewModelTest {
         assertEquals(listOf(SetupProblem.EMPTY_TEAM), vm.uiState.value.problems)
 
         vm.removeTeam(first.key)
+        assertTrue(vm.uiState.value.canStart)
+    }
+
+    @Test
+    fun scoringStartsFromTheGameAndCanBeFinishingOrder() = runBlocking {
+        val golf = (games.save(TEST_USER, null, GameDraft("Golf", null, null, ScoringDirection.LOWER_WINS, ScoringMode.INDIVIDUAL)) as SaveResult.Saved).id
+        val maya = addPlayer("Maya")
+        startViewModel()
+        assertEquals(golf, vm.uiState.value.form.gameId)
+        assertEquals(MatchScoring.LOWEST_WINS, vm.uiState.value.form.scoring)
+
+        vm.setScoring(MatchScoring.FINISHING_ORDER)
+        vm.togglePlayer(maya)
+        assertEquals(MatchScoring.FINISHING_ORDER, vm.uiState.value.form.toSetup().scoring)
         assertTrue(vm.uiState.value.canStart)
     }
 

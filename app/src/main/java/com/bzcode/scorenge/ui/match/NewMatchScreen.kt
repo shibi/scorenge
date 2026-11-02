@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bzcode.scorenge.data.local.entity.GameEntity
 import com.bzcode.scorenge.data.local.entity.PlayerEntity
 import com.bzcode.scorenge.domain.match.MatchSetupRules
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.ui.games.label
@@ -70,6 +71,7 @@ interface NewMatchActions {
     fun selectGame(game: GameEntity)
     fun onTitleChange(value: String)
     fun setScoringMode(mode: ScoringMode)
+    fun setScoring(scoring: MatchScoring)
     fun setRoundMode(mode: RoundMode)
     fun setTotalRounds(value: Int)
     fun togglePlayer(playerId: String)
@@ -96,6 +98,7 @@ fun NewMatchPage(
         override fun selectGame(game: GameEntity) = viewModel.selectGame(game)
         override fun onTitleChange(value: String) = viewModel.onTitleChange(value)
         override fun setScoringMode(mode: ScoringMode) = viewModel.setScoringMode(mode)
+        override fun setScoring(scoring: MatchScoring) = viewModel.setScoring(scoring)
         override fun setRoundMode(mode: RoundMode) = viewModel.setRoundMode(mode)
         override fun setTotalRounds(value: Int) = viewModel.setTotalRounds(value)
         override fun togglePlayer(playerId: String) = viewModel.togglePlayer(playerId)
@@ -190,14 +193,6 @@ fun NewMatchScreen(
                         leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                     )
                 }
-                state.games.firstOrNull { it.id == form.gameId }?.let { game ->
-                    Text(
-                        game.scoringDirection.label,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
             }
 
             OutlinedTextField(
@@ -220,6 +215,20 @@ fun NewMatchScreen(
                         ) { Text(mode.label) }
                     }
                 }
+            }
+
+            Section("How to score") {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    MatchScoring.entries.forEachIndexed { index, scoring ->
+                        SegmentedButton(
+                            selected = form.scoring == scoring,
+                            onClick = { actions.setScoring(scoring) },
+                            shape = SegmentedButtonDefaults.itemShape(index, MatchScoring.entries.size),
+                            icon = {},
+                        ) { Text(scoring.shortLabel, maxLines = 1) }
+                    }
+                }
+                Hint(form.scoring.hint)
             }
 
             Section("Rounds") {
@@ -379,3 +388,18 @@ private fun TeamCard(team: TeamDraft, allTeams: List<TeamDraft>, players: List<P
         }
     }
 }
+
+private val MatchScoring.shortLabel: String
+    get() = when (this) {
+        MatchScoring.HIGHEST_WINS -> "Highest"
+        MatchScoring.LOWEST_WINS -> "Lowest"
+        MatchScoring.FINISHING_ORDER -> "Finish order"
+    }
+
+private val MatchScoring.hint: String
+    get() = when (this) {
+        MatchScoring.HIGHEST_WINS -> "Type each round's score. Highest total wins."
+        MatchScoring.LOWEST_WINS -> "Type each round's score. Lowest total wins."
+        MatchScoring.FINISHING_ORDER ->
+            "Each round, tap players in the order they finished. 1st gets the most points, last gets 1. Highest total wins."
+    }

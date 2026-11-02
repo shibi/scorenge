@@ -1,5 +1,6 @@
 package com.bzcode.scorenge.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -7,6 +8,7 @@ import androidx.room.PrimaryKey
 import com.bzcode.scorenge.domain.model.EventStatus
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.model.ScoreEntry
 import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.domain.model.ScoringSubjectType
@@ -103,6 +105,9 @@ data class EventEntity(
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long? = null,
+    /** Added in schema v2; older matches are typed scores. */
+    @ColumnInfo(defaultValue = "POINTS")
+    val scoreEntry: ScoreEntry = ScoreEntry.POINTS,
 )
 
 /** A player taking part in a match. [playerName] is a snapshot so history keeps the name used then. */
