@@ -33,16 +33,19 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bzcode.scorenge.data.repository.InProgressMatch
 import com.bzcode.scorenge.ui.theme.ScorengeTheme
 
 /**
- * Hub home, following the approved "Hub Home (Updated Matches)" design. In this step it shows the
- * empty state; the in-progress match card and recent matches are wired to data in later steps.
+ * Hub home, following the approved "Hub Home (Updated Matches)" design: the match in progress (or a
+ * prompt to start one) and recent matches, which are wired to data in step 6.
  */
 @Composable
 fun HomeScreen(
     firstName: String?,
+    inProgress: InProgressMatch?,
     onNewMatch: () -> Unit,
+    onContinueMatch: (String) -> Unit,
     onSearchGames: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -54,7 +57,13 @@ fun HomeScreen(
     ) {
         item { Header(firstName, onOpenSettings) }
         item { SearchPill(onSearchGames) }
-        item { NoMatchCard(onNewMatch) }
+        item {
+            if (inProgress != null) {
+                ContinueMatchCard(inProgress, onContinue = { onContinueMatch(inProgress.eventId) })
+            } else {
+                NoMatchCard(onNewMatch)
+            }
+        }
         item { RecentMatchesSection() }
     }
 }
@@ -149,6 +158,48 @@ private fun NoMatchCard(onNewMatch: () -> Unit) {
 }
 
 @Composable
+private fun ContinueMatchCard(match: InProgressMatch, onContinue: () -> Unit) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(24.dp)) {
+            Text(
+                text = "Match in progress",
+                style = MaterialTheme.typography.labelLarge,
+                color = ScorengeTheme.colors.brand,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = listOfNotNull(match.game?.icon, match.title).joinToString(" "),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Round ${match.roundNumber.coerceAtLeast(1)} · ${match.subjectNames.joinToString(", ")}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = onContinue,
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            ) {
+                Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Continue match", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+}
+
+@Composable
 private fun RecentMatchesSection() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -179,6 +230,13 @@ private fun RecentMatchesSection() {
 @Composable
 private fun HomeScreenPreview() {
     ScorengeTheme {
-        HomeScreen(firstName = "Sam", onNewMatch = {}, onSearchGames = {}, onOpenSettings = {})
+        HomeScreen(
+            firstName = "Sam",
+            inProgress = null,
+            onNewMatch = {},
+            onContinueMatch = {},
+            onSearchGames = {},
+            onOpenSettings = {},
+        )
     }
 }

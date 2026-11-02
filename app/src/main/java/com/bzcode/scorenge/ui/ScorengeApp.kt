@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bzcode.scorenge.ui.auth.SignInRoute
+import com.bzcode.scorenge.ui.home.HomeViewModel
 import com.bzcode.scorenge.ui.navigation.ScorengeAppRoot
 
 /** Top level: sign-in gate, then the main app for the signed-in user. */
@@ -23,6 +24,10 @@ fun ScorengeApp(viewModel: AppViewModel = hiltViewModel()) {
                 .background(MaterialTheme.colorScheme.background),
         )
         AuthState.SignedOut -> SignInRoute()
-        is AuthState.SignedIn -> ScorengeAppRoot(user = state.user, onSignOut = viewModel::signOut)
+        is AuthState.SignedIn -> {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            val inProgress by homeViewModel.inProgress.collectAsStateWithLifecycle()
+            ScorengeAppRoot(user = state.user, onSignOut = viewModel::signOut, inProgress = inProgress)
+        }
     }
 }
