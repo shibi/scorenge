@@ -15,3 +15,6 @@ import kotlinx.serialization.Serializable
 
 /** Create (gameId null) or edit a game. Full screen. */
 @Serializable data class GameEditRoute(val gameId: String? = null)
+
+/** A match in progress or finished. Full screen. Rounds and scoring arrive in step 5. */
+@Serializable data class MatchRoute(val eventId: String)

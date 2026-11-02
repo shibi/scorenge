@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bzcode.scorenge.data.auth.AuthUser
+import com.bzcode.scorenge.ui.common.PlaceholderScreen
 import com.bzcode.scorenge.ui.theme.ScorengeTheme
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -24,7 +25,17 @@ class ScorengeAppRootTest {
 
     @Test
     fun barSwitchesTabsAndHidesOnFullScreenPages() {
-        compose.setContent { ScorengeTheme { ScorengeAppRoot(user = USER, onSignOut = {}) } }
+        compose.setContent {
+            ScorengeTheme {
+                ScorengeAppRoot(
+                    user = USER,
+                    onSignOut = {},
+                    newMatchContent = { onBack, _, _ ->
+                        PlaceholderScreen(title = "New match", message = "Match setup", onBack = onBack)
+                    },
+                )
+            }
+        }
 
         compose.onNodeWithText("Ready to roll").assertExists()
         compose.onNodeWithText("Hi Sam").assertExists()
@@ -34,7 +45,7 @@ class ScorengeAppRootTest {
         compose.onNodeWithContentDescription("Stats").assertIsSelected()
 
         compose.onNodeWithText("New match").performClick()
-        compose.onNodeWithText("Match setup is coming next.").assertExists()
+        compose.onNodeWithText("Match setup").assertExists()
         compose.onNodeWithContentDescription("Stats").assertDoesNotExist()
 
         compose.onNodeWithContentDescription("Back").performClick()
