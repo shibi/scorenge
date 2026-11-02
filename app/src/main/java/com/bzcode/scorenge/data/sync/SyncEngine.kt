@@ -94,20 +94,36 @@ class SyncEngine @Inject constructor(
             SyncCollection.Players -> dao.upsertPlayer(SyncCollection.Players.fromDoc(doc))
             SyncCollection.Games -> dao.upsertGame(SyncCollection.Games.fromDoc(doc))
             SyncCollection.Events -> dao.upsertEvent(SyncCollection.Events.fromDoc(doc))
-            SyncCollection.Participants -> dao.upsertParticipant(SyncCollection.Participants.fromDoc(doc))
-            SyncCollection.Teams -> dao.upsertTeam(SyncCollection.Teams.fromDoc(doc))
-            SyncCollection.TeamMembers -> dao.upsertTeamMember(SyncCollection.TeamMembers.fromDoc(doc))
-            SyncCollection.Subjects -> dao.upsertSubject(SyncCollection.Subjects.fromDoc(doc))
-            SyncCollection.Rounds -> dao.upsertRound(SyncCollection.Rounds.fromDoc(doc))
-            SyncCollection.Scores -> dao.upsertScore(SyncCollection.Scores.fromDoc(doc))
+            SyncCollection.Participants -> SyncCollection.Participants.fromDoc(doc)
+                .also { requireParent(dao.eventExists(it.eventId)) }.let { dao.upsertParticipant(it) }
+            SyncCollection.Teams -> SyncCollection.Teams.fromDoc(doc)
+                .also { requireParent(dao.eventExists(it.eventId)) }.let { dao.upsertTeam(it) }
+            SyncCollection.TeamMembers -> SyncCollection.TeamMembers.fromDoc(doc)
+                .also { requireParent(dao.teamExists(it.teamId)) }.let { dao.upsertTeamMember(it) }
+            SyncCollection.Subjects -> SyncCollection.Subjects.fromDoc(doc)
+                .also { requireParent(dao.eventExists(it.eventId)) }.let { dao.upsertSubject(it) }
+            SyncCollection.Rounds -> SyncCollection.Rounds.fromDoc(doc)
+                .also { requireParent(dao.eventExists(it.eventId)) }.let { dao.upsertRound(it) }
+            SyncCollection.Scores -> SyncCollection.Scores.fromDoc(doc)
+                .also { requireParent(dao.roundExists(it.roundId)) }.let { dao.upsertScore(it) }
         }
         true
+    } catch (e: MissingParentException) {
+        Log.w(TAG, "Skipping ${collection.name} document whose parent is missing", e)
+        false
     } catch (e: IllegalArgumentException) {
         Log.w(TAG, "Skipping malformed ${collection.name} document", e)
         false
     } catch (e: SQLiteConstraintException) {
         Log.w(TAG, "Skipping ${collection.name} document whose parent is missing", e)
         false
+    }
+
+    /** Thrown when a document's parent wasn't restored; checked here so it never depends on SQLite foreign key enforcement. */
+    private class MissingParentException : Exception()
+
+    private fun requireParent(exists: Boolean) {
+        if (!exists) throw MissingParentException()
     }
 
     private companion object {

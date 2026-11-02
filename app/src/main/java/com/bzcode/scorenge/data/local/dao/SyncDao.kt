@@ -87,6 +87,15 @@ interface SyncDao {
     )
     suspend fun hasLocalData(uid: String): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM events WHERE id = :id)")
+    suspend fun eventExists(id: String): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM teams WHERE id = :id)")
+    suspend fun teamExists(id: String): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM rounds WHERE id = :id)")
+    suspend fun roundExists(id: String): Boolean
+
     @Upsert suspend fun upsertPlayer(row: PlayerEntity)
     @Upsert suspend fun upsertGame(row: GameEntity)
     @Upsert suspend fun upsertEvent(row: EventEntity)
