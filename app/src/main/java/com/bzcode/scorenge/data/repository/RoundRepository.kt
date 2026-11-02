@@ -10,6 +10,7 @@ import com.bzcode.scorenge.data.local.entity.ScoringSubjectEntity
 import com.bzcode.scorenge.data.sync.DeletionLog
 import com.bzcode.scorenge.data.sync.SyncCollection
 import com.bzcode.scorenge.domain.match.FinishBlocker
+import com.bzcode.scorenge.domain.match.FinishingOrder
 import com.bzcode.scorenge.domain.match.RoundRules
 import com.bzcode.scorenge.domain.match.RoundState
 import com.bzcode.scorenge.domain.model.EventStatus
@@ -114,6 +115,30 @@ class RoundRepository @Inject constructor(
             existing?.copy(score = score, updatedAt = now)
                 ?: RoundScoreEntity(newId(), roundId, subjectId, score, now, now),
         )
+        eventDao.getById(round.eventId)?.let { eventDao.upsert(it.copy(lastPlayedAt = now, updatedAt = now)) }
+        true
+    }
+
+    /**
+     * Finishing-order rounds: saves [order] (subject ids, 1st first) as points per place. Players
+     * or teams not in [order] are cleared. Unknown or repeated ids are ignored.
+     */
+    suspend fun setFinishingOrder(roundId: String, order: List<String>): Boolean = db.withTransaction {
+        val round = roundDao.getById(roundId)
+        if (round == null || round.status != RoundStatus.ACTIVE) return@withTransaction false
+        val subjectIds = eventDao.getSubjects(round.eventId).map { it.id }
+        val places = order.distinct().filter { it in subjectIds }
+        val now = clock.nowMillis()
+        val existing = roundDao.getScores(roundId).associateBy { it.subjectId }
+        subjectIds.forEach { subjectId ->
+            val place = places.indexOf(subjectId) + 1
+            val score = if (place > 0) FinishingOrder.points(place, subjectIds.size) else null
+            val row = existing[subjectId]
+            if (row?.score == score && row != null) return@forEach
+            roundDao.upsertScore(
+                row?.copy(score = score, updatedAt = now) ?: RoundScoreEntity(newId(), roundId, subjectId, score, now, now),
+            )
+        }
         eventDao.getById(round.eventId)?.let { eventDao.upsert(it.copy(lastPlayedAt = now, updatedAt = now)) }
         true
     }

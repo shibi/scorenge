@@ -8,8 +8,10 @@ import com.bzcode.scorenge.data.local.ScorengeDatabase
 import com.bzcode.scorenge.domain.match.FinishBlocker
 import com.bzcode.scorenge.domain.match.MatchSetup
 import com.bzcode.scorenge.domain.model.EventStatus
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.RoundStatus
+import com.bzcode.scorenge.domain.model.ScoreEntry
 import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import com.bzcode.scorenge.seedUser
@@ -70,6 +72,35 @@ class RoundRepositoryTest {
         val roundId = d.rounds.single { it.roundNumber == number }.id
         d.subjects.zip(scores.toList()).forEach { (subject, score) -> assertTrue(rounds.setScore(roundId, subject.id, score)) }
         roundId
+    }
+
+    @Test
+    fun finishingOrderTurnsPlacesIntoPoints() = runBlocking {
+        val carol = (PlayerRepository(db.playerDao(), clock).save(TEST_USER, null, "Carol") as SaveResult.Saved).id
+        val id = matches.startMatch(
+            TEST_USER,
+            MatchSetup(gameId, ScoringMode.INDIVIDUAL, RoundMode.DYNAMIC, 0, listOf(maya, leo, carol), emptyList(), MatchScoring.FINISHING_ORDER),
+            "",
+        )
+        // Golf is "lowest wins", but finishing order always ranks by points, highest first.
+        assertEquals(ScoringDirection.HIGHER_WINS, detail(id).event.scoringDirection)
+        assertEquals(ScoreEntry.FINISHING_ORDER, detail(id).event.scoreEntry)
+        val roundId = round(id, 1).id
+        val (m, l, c) = detail(id).subjects.map { it.id }
+        assertFalse("pending rounds take no places", rounds.setFinishingOrder(roundId, listOf(l)))
+
+        rounds.openRound(id, 1)
+        assertTrue(rounds.setFinishingOrder(roundId, listOf(l, m)))
+        assertEquals(mapOf(l to 3L, m to 2L, c to null), detail(id).scoresOf(roundId))
+        assertFalse(rounds.completeRound(roundId))
+
+        // Taking 1st off moves Maya up; then Carol and Leo finish.
+        rounds.setFinishingOrder(roundId, listOf(m, c, l))
+        assertEquals(mapOf(m to 3L, c to 2L, l to 1L), detail(id).scoresOf(roundId))
+        assertTrue(rounds.completeRound(roundId))
+        assertNull(rounds.finishMatch(id))
+        assertEquals(listOf(1, 2, 3), detail(id).subjects.sortedBy { it.finalRank }.map { it.finalRank })
+        assertEquals(m, detail(id).subjects.single { it.finalRank == 1 }.id)
     }
 
     @Test

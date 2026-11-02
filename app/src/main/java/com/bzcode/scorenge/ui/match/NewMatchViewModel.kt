@@ -14,7 +14,9 @@ import com.bzcode.scorenge.domain.match.MatchSetup
 import com.bzcode.scorenge.domain.match.MatchSetupRules
 import com.bzcode.scorenge.domain.match.SetupProblem
 import com.bzcode.scorenge.domain.match.TeamSetup
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.RoundMode
+import com.bzcode.scorenge.domain.model.ScoringDirection
 import com.bzcode.scorenge.domain.model.ScoringMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,6 +47,8 @@ data class NewMatchForm(
     val gameId: String? = null,
     val title: String = "",
     val scoringMode: ScoringMode = ScoringMode.INDIVIDUAL,
+    /** Starts as the picked game's scoring direction. */
+    val scoring: MatchScoring = MatchScoring.HIGHEST_WINS,
     val roundMode: RoundMode = RoundMode.DYNAMIC,
     val totalRounds: Int = MatchSetupRules.DEFAULT_FIXED_ROUNDS,
     /** Individual mode, in the order picked. */
@@ -65,6 +69,7 @@ data class NewMatchForm(
         totalRounds = totalRounds,
         playerIds = playerIds,
         teams = teams.map { TeamSetup(it.name, it.playerIds) },
+        scoring = scoring,
     )
 }
 
@@ -127,12 +132,16 @@ class NewMatchViewModel @Inject constructor(
 
     fun selectGame(game: GameEntity) = form.update {
         val switched = it.gameId != game.id
-        it.copy(gameId = game.id).let { f -> if (switched) f.withMode(game.defaultScoringMode) else f }
+        it.copy(gameId = game.id).let { f ->
+            if (switched) f.withMode(game.defaultScoringMode).copy(scoring = game.scoringDirection.toMatchScoring()) else f
+        }
     }
 
     fun onTitleChange(value: String) = form.update { it.copy(title = value) }
 
     fun setScoringMode(mode: ScoringMode) = form.update { it.withMode(mode) }
+
+    fun setScoring(scoring: MatchScoring) = form.update { it.copy(scoring = scoring) }
 
     fun setRoundMode(mode: RoundMode) = form.update { it.copy(roundMode = mode) }
 
@@ -210,6 +219,11 @@ private fun NewMatchForm.withMode(mode: ScoringMode): NewMatchForm {
 
 private fun NewMatchForm.withNewTeam(): NewMatchForm =
     copy(teams = teams + TeamDraft(key = "team-$nextTeamNumber", name = "Team $nextTeamNumber", playerIds = emptyList()), nextTeamNumber = nextTeamNumber + 1)
+
+private fun ScoringDirection.toMatchScoring() = when (this) {
+    ScoringDirection.HIGHER_WINS -> MatchScoring.HIGHEST_WINS
+    ScoringDirection.LOWER_WINS -> MatchScoring.LOWEST_WINS
+}
 
 private val DayFormat = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
 

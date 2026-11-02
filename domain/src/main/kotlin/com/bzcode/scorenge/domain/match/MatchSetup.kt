@@ -1,5 +1,6 @@
 package com.bzcode.scorenge.domain.match
 
+import com.bzcode.scorenge.domain.model.MatchScoring
 import com.bzcode.scorenge.domain.model.RoundMode
 import com.bzcode.scorenge.domain.model.ScoringMode
 
@@ -20,6 +21,8 @@ data class MatchSetup(
     val playerIds: List<String>,
     /** Team mode: the teams, in order. Ignored in individual mode. */
     val teams: List<TeamSetup>,
+    /** Null: the game's own scoring direction with typed scores. */
+    val scoring: MatchScoring? = null,
 ) {
     /** Everyone taking part, in order: the players, or every team's members. */
     val participantIds: List<String>

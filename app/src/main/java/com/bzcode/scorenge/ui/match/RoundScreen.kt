@@ -1,6 +1,9 @@
 package com.bzcode.scorenge.ui.match
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -71,6 +76,8 @@ fun RoundPage(
         onBack = onBack,
         onScoreChange = viewModel::onScoreChange,
         onComplete = viewModel::completeRound,
+        onTapFinisher = viewModel::onTapFinisher,
+        onClearOrder = viewModel::clearFinishingOrder,
     )
 }
 
@@ -81,6 +88,8 @@ fun RoundScreen(
     onBack: () -> Unit,
     onScoreChange: (subjectId: String, text: String) -> Unit,
     onComplete: () -> Unit,
+    onTapFinisher: (subjectId: String) -> Unit = {},
+    onClearOrder: () -> Unit = {},
     nowMillis: () -> Long = System::currentTimeMillis,
 ) {
     Scaffold(
@@ -121,7 +130,12 @@ fun RoundScreen(
                 ) {
                     if (state.missingCount > 0) {
                         Text(
-                            if (state.missingCount == 1) "Enter 1 more score to complete the round." else "Enter ${state.missingCount} more scores to complete the round.",
+                            when {
+                                state.finishingOrder && state.missingCount == 1 -> "Place 1 more to complete the round."
+                                state.finishingOrder -> "Place ${state.missingCount} more to complete the round."
+                                state.missingCount == 1 -> "Enter 1 more score to complete the round."
+                                else -> "Enter ${state.missingCount} more scores to complete the round."
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp),
@@ -158,7 +172,9 @@ fun RoundScreen(
         ) {
             ClockCard(state, nowMillis)
             if (state.editable && state.leaders.isNotEmpty()) LeadingNowCard(state)
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (state.finishingOrder) {
+                FinishingOrderList(state, onTapFinisher, onClearOrder)
+            } else Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.fields.forEachIndexed { index, field ->
                     ScoreRow(
                         entry = field,
@@ -242,6 +258,76 @@ private fun LeadingNowCard(state: RoundUiState) {
                 "Includes this round's scores so far. Not final until the round is completed.",
                 style = MaterialTheme.typography.bodySmall,
             )
+        }
+    }
+}
+
+/** Tap players or teams in the order they finished; tap a placed one to take them off. */
+@Composable
+private fun FinishingOrderList(state: RoundUiState, onTap: (String) -> Unit, onClear: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (state.editable) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Tap in the order they finished. Tap again to undo.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                if (state.fields.any { it.place != null }) TextButton(onClick = onClear) { Text("Clear") }
+            }
+        }
+        // Placed first, in finishing order; then the rest in line-up order.
+        val ordered = state.fields.sortedWith(compareBy({ it.place == null }, { it.place ?: 0 }))
+        ordered.forEach { entry -> FinisherRow(entry, enabled = state.editable, onClick = { onTap(entry.subjectId) }) }
+    }
+}
+
+@Composable
+private fun FinisherRow(entry: ScoreField, enabled: Boolean, onClick: () -> Unit) {
+    val placed = entry.place != null
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = MaterialTheme.shapes.large,
+        color = if (placed) ScorengeTheme.colors.cream else MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = if (placed) ScorengeTheme.colors.onCream else MaterialTheme.colorScheme.onSurface,
+        border = if (placed) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = entry.place?.let { "${entry.name}, ${ordinal(it)} place" } ?: "${entry.name}, not placed"
+            },
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        if (placed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        CircleShape,
+                    ),
+            ) {
+                Text(
+                    entry.place?.let { ordinal(it) } ?: "–",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (placed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(entry.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    "Total so far ${entry.totalBefore}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            entry.points?.let {
+                Text("+$it pts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
