@@ -77,5 +77,8 @@ interface EventDao {
     suspend fun updateSubjects(subjects: List<ScoringSubjectEntity>)
 
     @Query("SELECT * FROM scoring_subjects WHERE eventId = :eventId ORDER BY sortOrder")
+    suspend fun getSubjects(eventId: String): List<ScoringSubjectEntity>
+
+    @Query("SELECT * FROM scoring_subjects WHERE eventId = :eventId ORDER BY sortOrder")
     fun observeSubjects(eventId: String): Flow<List<ScoringSubjectEntity>>
 }
