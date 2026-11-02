@@ -33,7 +33,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -181,11 +183,12 @@ fun RoundScreen(
 @Composable
 private fun ClockCard(state: RoundUiState, nowMillis: () -> Long) {
     val timer = RoundTimer(state.elapsedMillis, state.openedAt.takeIf { state.editable })
-    val elapsed by produceState(timer.elapsedMillis(nowMillis()), timer) {
-        value = timer.elapsedMillis(nowMillis())
+    var elapsed by remember { mutableLongStateOf(timer.elapsedMillis(nowMillis())) }
+    LaunchedEffect(timer) {
+        elapsed = timer.elapsedMillis(nowMillis())
         while (timer.isRunning) {
             delay(1_000)
-            value = timer.elapsedMillis(nowMillis())
+            elapsed = timer.elapsedMillis(nowMillis())
         }
     }
     Surface(
