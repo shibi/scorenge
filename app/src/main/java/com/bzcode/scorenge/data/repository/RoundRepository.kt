@@ -7,6 +7,8 @@ import com.bzcode.scorenge.data.local.entity.GameEntity
 import com.bzcode.scorenge.data.local.entity.RoundEntity
 import com.bzcode.scorenge.data.local.entity.RoundScoreEntity
 import com.bzcode.scorenge.data.local.entity.ScoringSubjectEntity
+import com.bzcode.scorenge.data.sync.DeletionLog
+import com.bzcode.scorenge.data.sync.SyncCollection
 import com.bzcode.scorenge.domain.match.FinishBlocker
 import com.bzcode.scorenge.domain.match.RoundRules
 import com.bzcode.scorenge.domain.match.RoundState
@@ -50,6 +52,7 @@ data class MatchDetail(
 class RoundRepository @Inject constructor(
     private val db: ScorengeDatabase,
     private val clock: Clock,
+    private val deletionLog: DeletionLog = DeletionLog.None,
 ) {
     private val eventDao get() = db.eventDao()
     private val roundDao get() = db.roundDao()
@@ -164,7 +167,12 @@ class RoundRepository @Inject constructor(
         RoundRules.finishBlocker(states)?.let { return@withTransaction it }
 
         val discarded = RoundRules.roundsDiscardedOnFinish(states).map { it.id }
-        if (discarded.isNotEmpty()) roundDao.deleteByIds(discarded)
+        if (discarded.isNotEmpty()) {
+            val discardedScores = discarded.flatMap { id -> roundDao.getScores(id).map { it.id } }
+            roundDao.deleteByIds(discarded)
+            deletionLog.recordDeleted(event.userId, SyncCollection.Rounds, discarded)
+            deletionLog.recordDeleted(event.userId, SyncCollection.Scores, discardedScores)
+        }
 
         val subjects = eventDao.getSubjects(eventId)
         val board = ScoringEngine.leaderboard(

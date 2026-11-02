@@ -42,6 +42,8 @@ abstract class ScorengeDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun roundDao(): RoundDao
 
+    abstract fun syncDao(): com.bzcode.scorenge.data.local.dao.SyncDao
+
     companion object {
         const val NAME = "scorenge.db"
     }
