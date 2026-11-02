@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wooden meeple for the sign-in hero, from the Stitch "Alternate Login" design. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="70dp"
+    android:viewportWidth="60"
+    android:viewportHeight="70">
+    <path
+        android:fillColor="#FFA51E"
+        android:pathData="M30,0C34.42,0 38,3.58 38,8C38,12.42 34.42,16 30,16C25.58,16 22,12.42 22,8C22,3.58 25.58,0 30,0Z" />
+    <path
+        android:fillColor="#FF9A0B"
+        android:pathData="M21,19C25,21 35,21 39,19C45,22 55,31 59,36C56,39 50,37 45,35C45,42 51,59 55,68C48,70 41,68 36,62C34,59 33,52 30,52C27,52 26,59 24,62C19,68 12,70 5,68C9,59 15,42 15,35C10,37 4,39 1,36C5,31 15,22 21,19Z" />
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M26,8C26,5.79 27.79,4 30,4C30.6,4 31.15,4.13 31.65,4.38C29.47,5.2 28,7.4 28,10C28,11.2 28.3,12.3 28.8,13.2C27.2,12.4 26,10.4 26,8Z" />
+</vector>

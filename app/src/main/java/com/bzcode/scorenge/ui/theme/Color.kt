@@ -19,6 +19,20 @@ val Peach = Color(0xFFFFE6DC)
 /** Warm off-white app background. */
 val WarmWhite = Color(0xFFFFFBEC)
 
+/** Pale creams for the sign-in screen's top gradient. */
+val CreamPaleTop = Color(0xFFFFFDF9)
+val CreamPale = Color(0xFFFFF5E6)
+val CreamPaleBottom = Color(0xFFFFF1DF)
+
+/** Cream fill for the sign-in button on the orange panel (#C93D18 text on it is 4.7:1). */
+val ButtonCream = Color(0xFFFFF5E2)
+
+/** Lower part of the sign-in panel, dark enough for small white text (4.6:1). */
+val BrandOrangePanel = Color(0xFFD63D19)
+
+/** Amber accent used for the gold pip and score chip in the sign-in artwork. */
+val AmberCitrus = Color(0xFFFFAE1A)
+
 /** Success green that passes contrast with white text. */
 val SuccessGreen = Color(0xFF15803D)
 
