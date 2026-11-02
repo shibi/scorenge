@@ -238,13 +238,12 @@ private fun StandingsSection(state: MatchUiState) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            Surface(shape = MaterialTheme.shapes.medium, color = ScorengeTheme.colors.cream, contentColor = ScorengeTheme.colors.onCream) {
-                Column(Modifier.padding(vertical = 4.dp)) {
-                    state.standings.forEachIndexed { index, entry ->
-                        if (index > 0) HorizontalDivider(color = ScorengeTheme.colors.onCream.copy(alpha = 0.12f))
-                        StandingRow(entry)
-                    }
-                }
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                TotalsBarChart(state.standings, Modifier.padding(16.dp))
             }
         }
     }

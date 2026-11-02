@@ -31,14 +31,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bzcode.scorenge.data.local.dao.RecentMatchRow
 import com.bzcode.scorenge.data.repository.InProgressMatch
 import com.bzcode.scorenge.ui.theme.ScorengeTheme
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Hub home, following the approved "Hub Home (Updated Matches)" design: the match in progress (or a
- * prompt to start one) and recent matches, which are wired to data in step 6.
+ * prompt to start one) and recent finished matches, which open their results.
  */
 @Composable
 fun HomeScreen(
@@ -46,6 +52,8 @@ fun HomeScreen(
     inProgress: InProgressMatch?,
     onNewMatch: () -> Unit,
     onContinueMatch: (String) -> Unit,
+    recentMatches: List<RecentMatchRow> = emptyList(),
+    onOpenResults: (String) -> Unit = {},
     onSearchGames: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -64,7 +72,7 @@ fun HomeScreen(
                 NoMatchCard(onNewMatch)
             }
         }
-        item { RecentMatchesSection() }
+        item { RecentMatchesSection(recentMatches, onOpenResults) }
     }
 }
 
@@ -200,7 +208,7 @@ private fun ContinueMatchCard(match: InProgressMatch, onContinue: () -> Unit) {
 }
 
 @Composable
-private fun RecentMatchesSection() {
+private fun RecentMatchesSection(matches: List<RecentMatchRow>, onOpen: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.History, contentDescription = null, tint = ScorengeTheme.colors.brand)
@@ -211,20 +219,57 @@ private fun RecentMatchesSection() {
                 modifier = Modifier.semantics { heading() },
             )
         }
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = ScorengeTheme.colors.cream,
-            contentColor = ScorengeTheme.colors.onCream,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = "Finished matches will show up here.",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(20.dp),
-            )
+        if (matches.isEmpty()) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = ScorengeTheme.colors.cream,
+                contentColor = ScorengeTheme.colors.onCream,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "Finished matches will show up here.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(20.dp),
+                )
+            }
+        } else {
+            matches.forEach { match -> RecentMatchCard(match, onClick = { onOpen(match.eventId) }) }
         }
     }
 }
+
+@Composable
+private fun RecentMatchCard(match: RecentMatchRow, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = ScorengeTheme.colors.cream,
+        contentColor = ScorengeTheme.colors.onCream,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+            Text(match.gameIcon ?: "🎲", style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(match.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    listOfNotNull(
+                        match.winners?.let { "🏆 $it" },
+                        match.completedAt?.let { recentDay(it) },
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private val RecentDayFormat = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+
+private fun recentDay(epochMillis: Long): String =
+    RecentDayFormat.format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFBEC)
 @Composable

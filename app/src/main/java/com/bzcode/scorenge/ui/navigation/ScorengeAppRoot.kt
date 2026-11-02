@@ -19,8 +19,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.bzcode.scorenge.data.auth.AuthUser
+import com.bzcode.scorenge.data.local.dao.RecentMatchRow
 import com.bzcode.scorenge.data.repository.InProgressMatch
-import com.bzcode.scorenge.ui.common.PlaceholderScreen
 import com.bzcode.scorenge.ui.games.GameEditPage
 import com.bzcode.scorenge.ui.games.GamesPage
 import com.bzcode.scorenge.ui.home.HomeScreen
@@ -30,6 +30,7 @@ import com.bzcode.scorenge.ui.match.ResultsPage
 import com.bzcode.scorenge.ui.match.RoundPage
 import com.bzcode.scorenge.ui.players.PlayersPage
 import com.bzcode.scorenge.ui.settings.SettingsScreen
+import com.bzcode.scorenge.ui.stats.StatsPage
 
 /** Signed-in app shell: the nav graph plus the floating pill bar, which shows only on top-level destinations. */
 @Composable
@@ -37,9 +38,11 @@ fun ScorengeAppRoot(
     user: AuthUser,
     onSignOut: () -> Unit,
     inProgress: InProgressMatch? = null,
+    recentMatches: List<RecentMatchRow> = emptyList(),
     navController: NavHostController = rememberNavController(),
     newMatchContent: @Composable (onBack: () -> Unit, onCreateGame: () -> Unit, onStarted: (String) -> Unit) -> Unit =
         { onBack, onCreateGame, onStarted -> NewMatchPage(onBack = onBack, onCreateGame = onCreateGame, onStarted = onStarted) },
+    statsContent: @Composable () -> Unit = { StatsPage() },
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentTopLevel = backStackEntry?.destination?.topLevelDestination()
@@ -70,6 +73,8 @@ fun ScorengeAppRoot(
                     inProgress = inProgress,
                     onNewMatch = { navController.navigate(NewMatchRoute) },
                     onContinueMatch = { navController.navigate(MatchRoute(eventId = it)) },
+                    recentMatches = recentMatches,
+                    onOpenResults = { navController.navigate(ResultsRoute(eventId = it)) },
                     onSearchGames = { navController.navigateToTopLevel(TopLevelDestination.GAMES) },
                     onOpenSettings = { navController.navigate(SettingsRoute) },
                 )
@@ -87,7 +92,7 @@ fun ScorengeAppRoot(
                 PlayersPage()
             }
             composable<StatsRoute> {
-                PlaceholderScreen(title = "Stats", message = "Wins and podiums across all games will show here.")
+                statsContent()
             }
             composable<NewMatchRoute> {
                 newMatchContent(
