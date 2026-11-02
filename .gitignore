@@ -8,3 +8,5 @@ captures/
 .kotlin/
 google-services.json
 debug.keystore
+release.keystore
+*.jks

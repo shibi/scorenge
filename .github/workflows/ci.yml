@@ -46,6 +46,20 @@ jobs:
       - name: Build, unit tests and lint
         run: ./gradlew --stacktrace :domain:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
+      # Builds the shrunk (R8) release app, so a missing keep rule fails here rather than in the
+      # Play Store build. Signed with the upload key when its secrets are set.
+      - name: Release build
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$RELEASE_KEYSTORE_PASSWORD" ]; then
+            printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > app/release.keystore
+          else
+            echo "::warning::Release key secrets not set; the release build is unsigned."
+          fi
+          ./gradlew --stacktrace :app:bundleRelease :app:assembleRelease
+
       - name: Check the Room schema is committed
         run: |
           if [ -n "$(git status --porcelain app/schemas)" ]; then
@@ -69,3 +83,12 @@ jobs:
         with:
           name: scorenge-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload release bundle and APK
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: scorenge-release
+          path: |
+            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/apk/release/*.apk

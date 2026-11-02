@@ -20,7 +20,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -37,10 +37,23 @@ android {
                 keyPassword = "android"
             }
         }
+        // Play upload key. Not in git: CI writes it from the RELEASE_KEYSTORE_BASE64 secret and passes
+        // the password in RELEASE_KEYSTORE_PASSWORD. Without them the release build is left unsigned.
+        val uploadKey = file("release.keystore")
+        val uploadPassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+        if (uploadKey.exists() && !uploadPassword.isNullOrEmpty()) {
+            create("release") {
+                storeFile = uploadKey
+                storePassword = uploadPassword
+                keyAlias = "scorenge-upload"
+                keyPassword = uploadPassword
+            }
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
