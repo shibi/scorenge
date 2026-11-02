@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.bzcode.scorenge.data.auth.AuthUser
 import com.bzcode.scorenge.data.repository.InProgressMatch
 import com.bzcode.scorenge.ui.common.PlaceholderScreen
@@ -25,6 +26,8 @@ import com.bzcode.scorenge.ui.games.GamesPage
 import com.bzcode.scorenge.ui.home.HomeScreen
 import com.bzcode.scorenge.ui.match.MatchPage
 import com.bzcode.scorenge.ui.match.NewMatchPage
+import com.bzcode.scorenge.ui.match.ResultsPage
+import com.bzcode.scorenge.ui.match.RoundPage
 import com.bzcode.scorenge.ui.players.PlayersPage
 import com.bzcode.scorenge.ui.settings.SettingsScreen
 
@@ -91,14 +94,31 @@ fun ScorengeAppRoot(
                     { navController.popBackStack() },
                     { navController.navigate(GameEditRoute()) },
                     { eventId ->
+                        // Starting a match opens round 1, with the match page underneath it.
                         navController.navigate(MatchRoute(eventId = eventId)) {
                             popUpTo<NewMatchRoute> { inclusive = true }
+                        }
+                        navController.navigate(RoundRoute(eventId = eventId, roundNumber = 1))
+                    },
+                )
+            }
+            composable<MatchRoute> { entry ->
+                val eventId = entry.toRoute<MatchRoute>().eventId
+                MatchPage(
+                    onBack = { navController.popBackStack() },
+                    onOpenRound = { navController.navigate(RoundRoute(eventId = eventId, roundNumber = it)) },
+                    onShowResults = {
+                        navController.navigate(ResultsRoute(eventId = eventId)) {
+                            popUpTo<MatchRoute> { inclusive = true }
                         }
                     },
                 )
             }
-            composable<MatchRoute> {
-                MatchPage(onBack = { navController.popBackStack() })
+            composable<RoundRoute> {
+                RoundPage(onBack = { navController.popBackStack() })
+            }
+            composable<ResultsRoute> {
+                ResultsPage(onDone = { navController.popBackStack() })
             }
             composable<SettingsRoute> {
                 SettingsScreen(

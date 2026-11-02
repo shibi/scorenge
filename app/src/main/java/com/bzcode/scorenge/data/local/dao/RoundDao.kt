@@ -24,6 +24,18 @@ interface RoundDao {
     @Query("SELECT * FROM rounds WHERE eventId = :eventId ORDER BY roundNumber")
     fun observeForEvent(eventId: String): Flow<List<RoundEntity>>
 
+    @Query("SELECT * FROM rounds WHERE eventId = :eventId ORDER BY roundNumber")
+    suspend fun getForEvent(eventId: String): List<RoundEntity>
+
+    @Query("SELECT * FROM rounds WHERE eventId = :eventId AND roundNumber = :roundNumber")
+    suspend fun getByNumber(eventId: String, roundNumber: Int): RoundEntity?
+
+    @Query("DELETE FROM rounds WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
+
+    @Query("SELECT * FROM round_scores WHERE roundId = :roundId")
+    suspend fun getScores(roundId: String): List<RoundScoreEntity>
+
     /** The match's latest round, whatever its status. */
     @Query("SELECT * FROM rounds WHERE eventId = :eventId ORDER BY roundNumber DESC LIMIT 1")
     suspend fun getLatest(eventId: String): RoundEntity?
