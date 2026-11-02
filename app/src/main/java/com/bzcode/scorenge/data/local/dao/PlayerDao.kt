@@ -17,4 +17,8 @@ interface PlayerDao {
     /** Players not soft-deleted, alphabetical. */
     @Query("SELECT * FROM players WHERE userId = :userId AND deletedAt IS NULL ORDER BY name COLLATE NOCASE")
     fun observeActive(userId: String): Flow<List<PlayerEntity>>
+
+    /** An active player with this name, ignoring case; used to block duplicates. */
+    @Query("SELECT * FROM players WHERE userId = :userId AND deletedAt IS NULL AND name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun findActiveByName(userId: String, name: String): PlayerEntity?
 }
