@@ -17,6 +17,12 @@ val PlusJakartaSans = FontFamily(
     Font(R.font.plus_jakarta_sans, FontWeight.ExtraBold),
 )
 
+/** Fredoka, a rounded display face for the sign-in headline and brand mark (variable font). */
+val Fredoka = FontFamily(
+    Font(R.font.fredoka, FontWeight.SemiBold),
+    Font(R.font.fredoka, FontWeight.Bold),
+)
+
 private val base = Typography()
 
 private fun TextStyle.jakarta(weight: FontWeight? = null) =

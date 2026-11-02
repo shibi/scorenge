@@ -1,6 +1,9 @@
 package com.bzcode.scorenge.ui.auth
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -33,5 +36,14 @@ class SignInScreenTest {
         compose.setContent { ScorengeTheme { SignInScreen(SignInUiState(inProgress = true), onSignIn = {}) } }
 
         compose.onNode(androidx.compose.ui.test.hasClickAction()).assertIsNotEnabled()
+    }
+
+    @Test
+    fun googleIsTheOnlySignInOption() {
+        compose.setContent { ScorengeTheme { SignInScreen(SignInUiState(), onSignIn = {}) } }
+
+        compose.onAllNodes(hasClickAction()).assertCountEquals(1)
+        compose.onNodeWithText("Continue with Google").assertExists()
+        compose.onNodeWithContentDescription("Scorenge").assertExists()
     }
 }

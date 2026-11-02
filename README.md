@@ -37,4 +37,4 @@ Room schema JSON in `app/schemas` must be committed whenever the database change
 
 ## Licences
 
-Plus Jakarta Sans is under the SIL Open Font License 1.1, see `licenses/PlusJakartaSans-OFL.txt`.
+Plus Jakarta Sans and Fredoka are under the SIL Open Font License 1.1, see `licenses/PlusJakartaSans-OFL.txt` and `licenses/Fredoka-OFL.txt`.
