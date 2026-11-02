@@ -30,11 +30,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.bzcode.scorenge.data.auth.AuthUser
 import com.bzcode.scorenge.ui.theme.ScorengeTheme
@@ -109,6 +111,13 @@ fun SettingsScreen(
                 Spacer(Modifier.width(8.dp))
                 Text("Sign out")
             }
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "Scorenge ${appVersion()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
     }
 
@@ -127,6 +136,14 @@ fun SettingsScreen(
                 TextButton(onClick = { confirmSignOut = false }) { Text("Cancel") }
             },
         )
+    }
+}
+
+@Composable
+private fun appVersion(): String {
+    val context = LocalContext.current
+    return remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
     }
 }
 
