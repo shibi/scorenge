@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import com.bzcode.scorenge.R
 import com.bzcode.scorenge.ui.theme.AmberCitrus
 import com.bzcode.scorenge.ui.theme.BrandOrange
