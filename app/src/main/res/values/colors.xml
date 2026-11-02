@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="scorenge_background">#FFFBEC</color>
+    <color name="scorenge_background_dark">#1C1612</color>
+    <color name="scorenge_brand">#F7502D</color>
+</resources>
