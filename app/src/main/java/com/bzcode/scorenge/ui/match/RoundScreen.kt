@@ -159,7 +159,7 @@ fun RoundScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.fields.forEachIndexed { index, field ->
                     ScoreRow(
-                        field = field,
+                        entry = field,
                         enabled = state.editable,
                         last = index == state.fields.lastIndex,
                         onChange = { onScoreChange(field.subjectId, it) },
@@ -210,9 +210,7 @@ private fun ClockCard(state: RoundUiState, nowMillis: () -> Long) {
                     "Pauses when you leave this page",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                .width(120.dp)
-                .semantics { contentDescription = "Score for ${field.name}" },
+                    modifier = Modifier.width(120.dp),
                 )
             }
         }
@@ -246,19 +244,19 @@ private fun LeadingNowCard(state: RoundUiState) {
 }
 
 @Composable
-private fun ScoreRow(field: ScoreField, enabled: Boolean, last: Boolean, onChange: (String) -> Unit) {
+private fun ScoreRow(entry: ScoreField, enabled: Boolean, last: Boolean, onChange: (String) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(field.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(entry.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                "Total so far ${field.totalBefore}",
+                "Total so far ${entry.totalBefore}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Spacer(Modifier.width(12.dp))
         OutlinedTextField(
-            value = field.text,
+            value = entry.text,
             onValueChange = onChange,
             enabled = enabled,
             singleLine = true,
@@ -271,7 +269,7 @@ private fun ScoreRow(field: ScoreField, enabled: Boolean, last: Boolean, onChang
             textStyle = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .width(120.dp)
-                .semantics { contentDescription = "Score for ${field.name}" },
+                .semantics { contentDescription = "Score for ${entry.name}" },
         )
     }
 }
