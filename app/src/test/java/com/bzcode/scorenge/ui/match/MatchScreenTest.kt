@@ -7,6 +7,7 @@ import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bzcode.scorenge.domain.match.FinishBlocker
 import com.bzcode.scorenge.domain.model.RoundStatus
@@ -56,7 +57,7 @@ class MatchScreenTest {
         compose.onNodeWithText("Start round 2").performClick()
         assertEquals(2, opened)
 
-        compose.onNodeWithText("Finish match").performClick()
+        compose.onNodeWithText("Finish match").performScrollTo().performClick()
         compose.onNodeWithText("Finish match?").assertExists()
         assertEquals(0, finished)
         compose.onNode(hasText("Finish") and hasAnyAncestor(isDialog())).performClick()
