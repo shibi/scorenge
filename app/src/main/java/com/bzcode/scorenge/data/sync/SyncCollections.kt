@@ -172,8 +172,13 @@ sealed class SyncCollection<T : Any>(val name: String) {
     }
 
     companion object {
-        /** Parents before children. */
-        val all: List<SyncCollection<*>> = listOf(Players, Games, Events, Participants, Teams, TeamMembers, Subjects, Rounds, Scores)
+        /**
+         * Parents before children. Lazy: the subclasses initialise this class first, so an eager list
+         * built while one of them is still initialising would hold null for it.
+         */
+        val all: List<SyncCollection<*>> by lazy {
+            listOf(Players, Games, Events, Participants, Teams, TeamMembers, Subjects, Rounds, Scores)
+        }
 
         fun byName(name: String): SyncCollection<*>? = all.firstOrNull { it.name == name }
     }
